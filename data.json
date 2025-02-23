@@ -1,0 +1,35 @@
+{
+    "name": "root",
+    "children": [
+        {
+            "name": "Team A",
+            "children": [
+                {
+                    "name": "Project A1",
+                    "children": [
+                        {"name": "Metadata A1-1"},
+                        {"name": "Metadata A1-2"}
+                    ]
+                },
+                {
+                    "name": "Project A2",
+                    "children": [
+                        {"name": "Metadata A2-1"}
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Team B",
+            "children": [
+                {
+                    "name": "Project B1",
+                    "children": [
+                        {"name": "Metadata B1-1"},
+                        {"name": "Metadata B1-2"}
+                    ]
+                }
+            ]
+        }
+    ]
+}
