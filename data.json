@@ -1,35 +1,31 @@
 {
-    "name": "root",
+    "name": "Department",
+    "image": "img/department.png",
     "children": [
-        {
-            "name": "Team A",
+      {
+        "name": "Team A",
+        "image": "img/team_a.png",
+        "children": [
+          {
+            "name": "Project X",
             "children": [
-                {
-                    "name": "Project A1",
-                    "children": [
-                        {"name": "Metadata A1-1"},
-                        {"name": "Metadata A1-2"}
-                    ]
-                },
-                {
-                    "name": "Project A2",
-                    "children": [
-                        {"name": "Metadata A2-1"}
-                    ]
-                }
+              {"name": "Manager", "value": "Alice"},
+              {"name": "Website", "value": "https://example.com"}
             ]
-        },
-        {
-            "name": "Team B",
+          }
+        ]
+      },
+      {
+        "name": "Team B",
+        "children": [
+          {
+            "name": "Project Y",
             "children": [
-                {
-                    "name": "Project B1",
-                    "children": [
-                        {"name": "Metadata B1-1"},
-                        {"name": "Metadata B1-2"}
-                    ]
-                }
+              {"name": "Manager", "value": "Bob"},
+              {"name": "Documentation", "value": "Internal doc"}
             ]
-        }
+          }
+        ]
+      }
     ]
-}
+  }

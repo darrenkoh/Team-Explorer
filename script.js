@@ -1,163 +1,187 @@
-// Set dimensions and margins
-const margin = { top: 20, right: 120, bottom: 20, left: 120 },
-      width = 960 - margin.right - margin.left,
-      height = 600 - margin.top - margin.bottom;
+// Define margins for the visualization
+var margin = {top: 50, right: 50, bottom: 50, left: 50};
 
-// Create SVG and main group
-const svg = d3.select("svg")
-    .attr("width", width + margin.right + margin.left)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
+// Load the data from data.json
+d3.json("data.json").then(function(data) {
+  // Create the hierarchy from the data
+  var root = d3.hierarchy(data);
+  
+  // Initialize all nodes with _children set to children (for collapsing)
+  root.descendants().forEach(function(d) {
+    d._children = d.children ? d.children.slice() : null;  // Store a copy of children
+    d.children = d._children;  // Initially expanded
+  });
+  
+  // Function to update the visualization
+  function update() {
+    // Get visible nodes and links
+    var nodes = root.descendants().filter(function(d) {
+      return d.parent ? d.parent.children : true;
+    });
+    var links = root.links().filter(function(d) {
+      return d.source.children && d.target.parent.children;
+    });
+    
+    // Update simulation with visible nodes
+    simulation.nodes(nodes);
+    simulation.force("link").links(links);
+    simulation.alpha(1).restart();
+    
+    // Update links
+    var link = zoomGroup.selectAll(".link")
+      .data(links, function(d) { return d.target.id; });
+    link.exit().remove();
+    link.enter().append("line")
+      .attr("class", "link")
+      .on("click", function(event) {
+        event.stopPropagation();  // Prevent zoom on edge click
+      });
+    
+    // Update nodes
+    var node = zoomGroup.selectAll(".node")
+      .data(nodes, function(d) { return d.id; });
+    node.exit().remove();
+    var nodeEnter = node.enter().append("g")
+      .attr("class", "node")
+      .call(d3.drag()  // Enable dragging
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended))
+      .on("click", function(event, d) {
+        event.stopPropagation();  // Prevent zoom on node click
+        toggleExpandCollapse(d);
+      });
+    
+    // Append images or circles for nodes
+    nodeEnter.each(function(d) {
+      var nodeGroup = d3.select(this);
+      if (d.data.image) {
+        nodeGroup.append("image")
+          .attr("xlink:href", d.data.image)
+          .attr("x", -10)
+          .attr("y", -10)
+          .attr("width", 20)
+          .attr("height", 20);
+      } else {
+        nodeGroup.append("circle")
+          .attr("r", 5);
+      }
+    });
+    
+    // Append text labels for nodes
+    nodeEnter.each(function(d) {
+      var nodeGroup = d3.select(this);
+      if (!d.children && d.data.value && (d.data.value.startsWith("http://") || d.data.value.startsWith("https://"))) {
+        var a = nodeGroup.append("a")
+          .attr("xlink:href", d.data.value)
+          .attr("target", "_blank");
+        a.append("text")
+          .attr("x", 15)
+          .attr("y", 3)
+          .text(d.data.name + ": " + d.data.value);
+      } else {
+        nodeGroup.append("text")
+          .attr("x", 15)
+          .attr("y", 3)
+          .text(d.data.name + (d.data.value ? ": " + d.data.value : ""));
+      }
+    });
 
-// Create tree layout
-const tree = d3.tree().size([height, width]);
-
-// Define link generator (horizontal tree)
-const diagonal = d3.linkHorizontal()
-    .x(d => d.y)
-    .y(d => d.x);
-
-// Load JSON data
-d3.json("data.json").then(data => {
-    // Create hierarchy
-    const root = d3.hierarchy(data);
-
-    // Collapse function: hides children by moving them to _children
-    function collapse(d) {
-        if (d.children) {
-            d._children = d.children;
-            d._children.forEach(collapse);
-            d.children = null;
-        }
+    // Update font weight based on expand/collapse state
+    node.merge(nodeEnter).select("text")
+    .style("font-weight", function(d) {
+    return d._children && !d.children ? "bold" : "normal";  // Bold if collapsed, normal if expanded
+    });   
+  }
+  
+  // Function to toggle expand/collapse
+  function toggleExpandCollapse(d) {
+    if (d._children) {
+      if (d.children) {
+        // Collapse: hide children
+        d.children = null;
+      } else {
+        // Expand: show children
+        d.children = d._children.slice();  // Use a copy to preserve original
+      }
+      update();
     }
-
-    // Collapse all nodes below the root (teams and their descendants)
-    root.children.forEach(collapse);
-
-    // Initialize positions for smooth transitions
-    root.x0 = 0;
-    root.y0 = 0;
-
-    // Initial update
-    update(root);
-
-    // Update function to render the tree
-    function update(source) {
-        // Compute the new tree layout
-        const treeData = tree(root);
-        const nodes = treeData.descendants(),
-              links = treeData.descendants().slice(1);
-
-        // Normalize depth for fixed spacing
-        nodes.forEach(d => {
-            d.y = d.depth * 180;
-        });
-
-        // Nodes
-        const node = svg.selectAll(".node")
-            .data(nodes.filter(d => d.depth > 0), d => d.id || (d.id = ++i));
-
-        // Enter new nodes
-        const nodeEnter = node.enter().append("g")
-            .attr("class", "node")
-            .attr("transform", d => `translate(${source.y0},${source.x0})`)
-            .on("click", click);
-
-        nodeEnter.append("circle")
-            .attr("r", 1e-6)
-            .style("fill", d => {
-                if (d.depth === 1) return "red";        // Teams
-                if (d.depth === 2) return "blue";       // Projects
-                if (d.depth === 3) return "green";      // Metadata
-                return "#fff";
-            })
-            .style("fill-opacity", d => d._children ? 0.6 : 1);
-
-        nodeEnter.append("text")
-            .attr("x", d => d.children || d._children ? -13 : 13)
-            .attr("dy", ".35em")
-            .attr("text-anchor", d => d.children || d._children ? "end" : "start")
-            .text(d => d.data.name)
-            .style("fill-opacity", 1e-6);
-
-        // Update nodes
-        const nodeUpdate = nodeEnter.merge(node);
-
-        nodeUpdate.transition()
-            .duration(750)
-            .attr("transform", d => `translate(${d.y},${d.x})`);
-
-        nodeUpdate.select("circle")
-            .attr("r", 4.5)
-            .style("fill", d => {
-                if (d.depth === 1) return "red";
-                if (d.depth === 2) return "blue";
-                if (d.depth === 3) return "green";
-                return "#fff";
-            })
-            .style("fill-opacity", d => d._children ? 0.6 : 1);
-
-        nodeUpdate.select("text")
-            .style("fill-opacity", 1);
-
-        // Exit nodes
-        const nodeExit = node.exit().transition()
-            .duration(750)
-            .attr("transform", d => `translate(${source.y},${source.x})`)
-            .remove();
-
-        nodeExit.select("circle")
-            .attr("r", 1e-6);
-
-        nodeExit.select("text")
-            .style("fill-opacity", 1e-6);
-
-        // Links
-        const link = svg.selectAll(".link")
-            .data(links, d => d.id);
-
-        // Enter new links
-        const linkEnter = link.enter().insert("path", "g")
-            .attr("class", "link")
-            .attr("d", d => {
-                const o = { x: source.x0, y: source.y0 };
-                return diagonal({ source: o, target: o });
-            });
-
-        // Update links
-        const linkUpdate = linkEnter.merge(link);
-
-        linkUpdate.transition()
-            .duration(750)
-            .attr("d", diagonal);
-
-        // Exit links
-        const linkExit = link.exit().transition()
-            .duration(750)
-            .attr("d", d => {
-                const o = { x: source.x, y: source.y };
-                return diagonal({ source: o, target: o });
-            })
-            .remove();
-
-        // Store the old positions for transitions
-        nodes.forEach(d => {
-            d.x0 = d.x;
-            d.y0 = d.y;
-        });
-    }
-
-    // Click handler to toggle children
-    let i = 0;
-    function click(event, d) {
-        if (d.children) {
-            d._children = d.children;
-            d.children = null;
-        } else {
-            d.children = d._children;
-            d._children = null;
-        }
-        update(d);
-    }
+  }
+  
+  // Drag functions
+  function dragstarted(event, d) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
+  
+  function dragged(event, d) {
+    d.fx = event.x;
+    d.fy = event.y;
+  }
+  
+  function dragended(event, d) {
+    if (!event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+  }
+  
+  // Set initial dimensions based on the window size
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+  
+  // Create the SVG container
+  var svg = d3.select("#tree").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+  
+  // Create a group for zooming and panning
+  var zoomGroup = svg.append("g");
+  
+  // Set up zoom behavior
+  var zoom = d3.zoom().on("zoom", function(event) {
+    zoomGroup.attr("transform", event.transform);
+  });
+  svg.call(zoom);
+  
+  // Set initial zoom transform to account for margins
+  svg.call(zoom.transform, d3.zoomIdentity.translate(margin.left, margin.top));
+  
+  // Create the force simulation
+  var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink().id(function(d) { return d.id; }).distance(100))
+    .force("charge", d3.forceManyBody().strength(-200))
+    .force("center", d3.forceCenter(width / 2, height / 2));
+  
+  // Assign unique IDs to nodes for the simulation
+  root.descendants().forEach(function(d, i) {
+    d.id = i;
+  });
+  
+  // Initial update
+  update();
+  
+  // Function to update layout on window resize
+  function updateLayout() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    svg.attr("width", width).attr("height", height);
+    simulation.force("center", d3.forceCenter(width / 2, height / 2));
+    simulation.alpha(1).restart();
+  }
+  
+  // Add resize event listener
+  window.addEventListener("resize", updateLayout);
+  
+  // Update positions on each tick of the simulation
+  simulation.on("tick", function() {
+    zoomGroup.selectAll(".link")
+      .attr("x1", function(d) { return d.source.x; })
+      .attr("y1", function(d) { return d.source.y; })
+      .attr("x2", function(d) { return d.target.x; })
+      .attr("y2", function(d) { return d.target.y; });
+    
+    zoomGroup.selectAll(".node")
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+  });
 });

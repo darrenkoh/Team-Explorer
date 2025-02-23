@@ -1,0 +1,38 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .link {
+    stroke: #ccc;
+    stroke-width: 2px;
+  }
+  
+  .node circle {
+    fill: #fff;
+    stroke: steelblue;
+    stroke-width: 3px;
+  }
+  
+  .node text {
+    font-size: 12px;
+  }
+  
+  a text {
+    fill: blue;
+    cursor: pointer;
+  }
+  
+  .node image {
+    cursor: pointer;
+  }
+  
+  .expand-collapse {
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .expand-collapse text {
+    fill: #000;
+  }
