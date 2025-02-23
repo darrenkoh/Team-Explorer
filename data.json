@@ -1,31 +1,63 @@
 {
     "name": "Department",
     "image": "img/department.png",
+    "color": "blue",
+    "imageSize": 20,
+    "circleRadius": 20,
+    "edgeColor": "blue",
+    "edgeWidth": 3,
     "children": [
-      {
-        "name": "Team A",
-        "image": "img/team_a.png",
-        "children": [
-          {
-            "name": "Project X",
+        {
+            "name": "Team A",
+            "image": "img/team_a.png",
+            "color": "green",
+            "imageSize": 30,
+            "circleRadius": 18,
+            "edgeColor": "green",
+            "edgeWidth": 1,
             "children": [
-              {"name": "Manager", "value": "Alice"},
-              {"name": "Website", "value": "https://example.com"}
+                {
+                    "name": "Project X",
+                    "color": "red",
+                    "imageSize": 30,
+                    "circleRadius": 18,
+                    "edgeColor": "red",
+                    "edgeWidth": 1,
+                    "children": [
+                        {
+                            "name": "Manager",
+                            "value": "Alice"
+                        },
+                        {
+                            "name": "Website",
+                            "value": "https://example.com"
+                        }
+                    ]
+                }
             ]
-          }
-        ]
-      },
-      {
-        "name": "Team B",
-        "children": [
-          {
-            "name": "Project Y",
+        },
+        {
+            "name": "Team B",
+            "color": "yellow",
+            "imageSize": 30,
+            "circleRadius": 18,
+            "edgeColor": "yellow",
+            "edgeWidth": 1,
             "children": [
-              {"name": "Manager", "value": "Bob"},
-              {"name": "Documentation", "value": "Internal doc"}
+                {
+                    "name": "Project Y",
+                    "children": [
+                        {
+                            "name": "Manager",
+                            "value": "Bob"
+                        },
+                        {
+                            "name": "Documentation",
+                            "value": "Internal doc"
+                        }
+                    ]
+                }
             ]
-          }
-        ]
-      }
+        }
     ]
-  }
+}

@@ -52,46 +52,62 @@ d3.json("data.json").then(function(data) {
         toggleExpandCollapse(d);
       });
     
-    // Append images or circles for nodes
+    // Append node elements (circles and images)
     nodeEnter.each(function(d) {
       var nodeGroup = d3.select(this);
+      
+      // Compute sizes based on node properties or defaults
+      var imageSize = d.data.image ? (d.data.imageSize || 20) : null;
+      var circleRadius = d.data.image ? (d.data.circleRadius || (imageSize / 2) + 2) : null;
+      var nodeRadius = d.data.image ? null : (d.data.nodeRadius || 5);
+      var effectiveRadius = d.data.image ? Math.max(circleRadius, imageSize / 2) : nodeRadius;
+      
       if (d.data.image) {
+        // Append circle around the image
+        nodeGroup.append("circle")
+          .attr("r", circleRadius)
+          .attr("fill", "none")
+          .attr("stroke", d.data.color || "steelblue")
+          .attr("stroke-width", 2);
+        
+        // Append image
         nodeGroup.append("image")
           .attr("xlink:href", d.data.image)
-          .attr("x", -10)
-          .attr("y", -10)
-          .attr("width", 20)
-          .attr("height", 20);
+          .attr("x", -imageSize / 2)
+          .attr("y", -imageSize / 2)
+          .attr("width", imageSize)
+          .attr("height", imageSize);
       } else {
+        // Append circle for nodes without images
         nodeGroup.append("circle")
-          .attr("r", 5);
+          .attr("r", nodeRadius)
+          .attr("fill", "white")
+          .attr("stroke", "steelblue")
+          .attr("stroke-width", 2);
       }
-    });
-    
-    // Append text labels for nodes
-    nodeEnter.each(function(d) {
-      var nodeGroup = d3.select(this);
+      
+      // Append text labels
       if (!d.children && d.data.value && (d.data.value.startsWith("http://") || d.data.value.startsWith("https://"))) {
         var a = nodeGroup.append("a")
           .attr("xlink:href", d.data.value)
           .attr("target", "_blank");
         a.append("text")
-          .attr("x", 15)
+          .attr("x", effectiveRadius + 5)
           .attr("y", 3)
           .text(d.data.name + ": " + d.data.value);
       } else {
         nodeGroup.append("text")
-          .attr("x", 15)
+          .attr("x", effectiveRadius + 5)
           .attr("y", 3)
           .text(d.data.name + (d.data.value ? ": " + d.data.value : ""));
       }
     });
-
+    
     // Update font weight based on expand/collapse state
     node.merge(nodeEnter).select("text")
-    .style("font-weight", function(d) {
-    return d._children && !d.children ? "bold" : "normal";  // Bold if collapsed, normal if expanded
-    });   
+      .style("font-weight", function(d) {
+        return d._children && !d.children ? "bold" : "normal";  // Bold if collapsed
+      });
   }
   
   // Function to toggle expand/collapse
