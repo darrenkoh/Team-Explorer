@@ -4,10 +4,10 @@ body {
     padding: 0;
   }
   
-  .link {
+  /* .link {
     stroke: #ccc;
     stroke-width: 2px;
-  }
+  } */
   
   .node circle {
     fill: #fff;

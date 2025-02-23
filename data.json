@@ -2,9 +2,9 @@
     "name": "Department",
     "image": "img/department.png",
     "color": "blue",
-    "imageSize": 20,
-    "circleRadius": 20,
-    "edgeColor": "blue",
+    "imageSize": 18,
+    "circleRadius": 19,
+    "edgeColor": "#ccd",
     "edgeWidth": 3,
     "children": [
         {
