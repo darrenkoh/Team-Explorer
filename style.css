@@ -22,6 +22,15 @@ body {
     cursor: pointer;
   }
   
+  .link-text {
+    fill: blue;
+  }
+  
+  .link-icon {
+    fill: blue;
+    font-size: 10px;
+  }
+  
   .node image {
     cursor: pointer;
   }

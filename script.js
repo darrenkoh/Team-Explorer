@@ -14,6 +14,22 @@ d3.json("data.json").then(function (data) {
         d.children = d._children;  // Initially expanded
     });
 
+    // Function to calculate node radius based on its properties
+    function getNodeRadius(d) {
+        if (d.data.image) {
+            var imageSize = d.data.imageSize || 20;
+            var circleRadius = d.data.circleRadius || (imageSize / 2) + 2;
+            return Math.max(circleRadius, imageSize / 2);
+        } else {
+            return d.data.nodeRadius || 5;
+        }
+    }
+
+    // Function to estimate text width based on content
+    function estimateTextWidth(text) {
+        return text.length * 6; // Rough estimate: 6px per character
+    }
+
     // Function to update the visualization
     function update() {
         // Get visible nodes and links
@@ -24,9 +40,63 @@ d3.json("data.json").then(function (data) {
             return d.source.children && d.target.parent.children;
         });
 
+        // Organize nodes by parent for radial layout
+        var nodesByParent = {};
+        nodes.forEach(function(node) {
+            if (node.parent) {
+                var parentId = node.parent.id;
+                if (!nodesByParent[parentId]) {
+                    nodesByParent[parentId] = [];
+                }
+                nodesByParent[parentId].push(node);
+            }
+        });
+
+        // Apply initial positions in a radial layout
+        Object.keys(nodesByParent).forEach(function(parentId) {
+            var childNodes = nodesByParent[parentId];
+            var parent = nodes.find(n => n.id == parentId);
+            
+            // Skip if parent position is not yet defined
+            if (!parent.x || !parent.y) return;
+            
+            var angleStep = 2 * Math.PI / childNodes.length;
+            var radius = 100 + (childNodes.length * 10); // Adjust radius based on number of children
+            
+            childNodes.forEach(function(child, i) {
+                var angle = i * angleStep;
+                // Set initial positions in a circle around parent
+                child.x = parent.x + radius * Math.cos(angle);
+                child.y = parent.y + radius * Math.sin(angle);
+            });
+        });
+
         // Update simulation with visible nodes
         simulation.nodes(nodes);
         simulation.force("link").links(links);
+        
+        // Add collision detection to prevent node overlap
+        simulation.force("collision", d3.forceCollide().radius(function(d) {
+            // Calculate radius based on node properties
+            var baseRadius = d.data.image ? (d.data.circleRadius || 20) : 10;
+            // Add extra padding for nodes with children (clusters)
+            var clusterPadding = d.children ? 40 : 20;
+            return baseRadius + clusterPadding;
+        }).strength(0.8));
+        
+        // Add radial forces to maintain the circular arrangement
+        simulation.force("radial", d3.forceRadial(function(d) {
+            // Only apply to nodes with parents
+            if (!d.parent) return 0;
+            
+            var siblings = nodesByParent[d.parent.id] || [];
+            return 100 + (siblings.length * 10); // Same radius calculation as above
+        }, function(d) {
+            return d.parent ? d.parent.x : width / 2;
+        }, function(d) {
+            return d.parent ? d.parent.y : height / 2;
+        }).strength(0.3));
+        
         simulation.alpha(1).restart();
 
         // Update links with custom color and width
@@ -104,13 +174,22 @@ d3.json("data.json").then(function (data) {
 
             // Append text labels
             if (!d.children && d.data.value && (d.data.value.startsWith("http://") || d.data.value.startsWith("https://"))) {
+                // Create a clickable link without showing the URL
                 var a = nodeGroup.append("a")
                     .attr("xlink:href", d.data.value)
                     .attr("target", "_blank");
+                
+                // Add a visible text showing only the name (not the URL)
                 a.append("text")
                     .attr("x", effectiveRadius + 5)
                     .attr("y", 3)
-                    .text(d.data.name + ": " + d.data.value);
+                    .text(d.data.name)
+                    .attr("class", "link-text");
+                    
+                // Add a small icon or indicator to show it's a link with better spacing
+                a.append("text")                    
+                    .attr("y", 3)
+                    .attr("class", "link-icon");
             } else {
                 nodeGroup.append("text")
                     .attr("x", effectiveRadius + 5)
@@ -182,13 +261,17 @@ d3.json("data.json").then(function (data) {
     // Create the force simulation
     var simulation = d3.forceSimulation()
         .force("link", d3.forceLink().id(function (d) { return d.id; }).distance(100))
-        .force("charge", d3.forceManyBody().strength(-200))
+        .force("charge", d3.forceManyBody().strength(-300))
         .force("center", d3.forceCenter(width / 2, height / 2));
 
     // Assign unique IDs to nodes for the simulation
     root.descendants().forEach(function (d, i) {
         d.id = i;
     });
+
+    // Set initial position for the root node
+    root.x = width / 2;
+    root.y = height / 2;
 
     // Initial update
     update();
