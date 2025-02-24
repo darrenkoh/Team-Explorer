@@ -1,5 +1,5 @@
 {
-    "name": "Department",
+    "name": "Digital Transformation",
     "image": "img/department.png",
     "color": "blue",
     "imageSize": 18,
@@ -10,14 +10,15 @@
         {
             "name": "Team A",
             "image": "img/team_a.png",
-            "color": "green",
+            "color": "#c31",
             "imageSize": 30,
-            "circleRadius": 18,
+            "circleRadius": 22,
             "edgeColor": "green",
             "edgeWidth": 1,
             "children": [
                 {
                     "name": "Project X",
+                    "image": "img/team_a.png",
                     "color": "red",
                     "imageSize": 30,
                     "circleRadius": 18,
