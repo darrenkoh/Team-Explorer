@@ -2,7 +2,7 @@
     "name": "Digital Transformation",
     "image": "img/department.png",
     "color": "blue",
-    "imageSize": 18,
+    "imageSize": 30,
     "circleRadius": 19,
     "edgeColor": "#ccd",
     "edgeWidth": 3,
