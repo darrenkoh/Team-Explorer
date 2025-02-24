@@ -1,20 +1,22 @@
 {
     "name": "Digital Transformation",
     "image": "img/department.png",
-    "color": "blue",
+    "color": "#56AA7A",
     "imageSize": 30,
-    "circleRadius": 19,
-    "edgeColor": "#ccd",
+    "circleRadius": 20,
+    "circleColor": "white",
+    "edgeColor": "#69AF73",
     "edgeWidth": 3,
     "children": [
         {
-            "name": "Team A",
-            "image": "img/team_a.png",
-            "color": "#c31",
-            "imageSize": 30,
-            "circleRadius": 22,
-            "edgeColor": "green",
-            "edgeWidth": 1,
+            "name": "Billing",
+            "image": "img/billing_team.png",
+            "color": "#000080",
+            "imageSize": 28,
+            "circleRadius": 21,
+            "circleColor": "#355db5",
+            "edgeColor": "#000080",
+            "edgeWidth": 2,
             "children": [
                 {
                     "name": "Project X",
@@ -38,12 +40,13 @@
             ]
         },
         {
-            "name": "Team B",
-            "color": "yellow",
+            "name": "MPX",
+            "image": "img/mpx_team.png",
+            "color": "orange",
             "imageSize": 30,
             "circleRadius": 18,
-            "edgeColor": "yellow",
-            "edgeWidth": 1,
+            "edgeColor": "orange",
+            "edgeWidth": 2,
             "children": [
                 {
                     "name": "Project Y",

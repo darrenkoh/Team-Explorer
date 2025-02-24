@@ -65,6 +65,7 @@ d3.json("data.json").then(function (data) {
             // Compute sizes based on node properties or defaults
             var imageSize = d.data.image ? (d.data.imageSize || 20) : null;
             var circleRadius = d.data.image ? (d.data.circleRadius || (imageSize / 2) + 2) : null;
+            var circleColor = d.data.image ? (d.data.circleColor || d.data.color) : null;
             var nodeRadius = d.data.image ? null : (d.data.nodeRadius || 5);
             var effectiveRadius = d.data.image ? Math.max(circleRadius, imageSize / 2) : nodeRadius;
 
@@ -72,17 +73,26 @@ d3.json("data.json").then(function (data) {
                 // Append circle around the image
                 nodeGroup.append("circle")
                     .attr("r", circleRadius)
-                    .attr("fill", "none")
+                    .attr("fill", circleColor)
                     .attr("stroke", d.data.color || "steelblue")
                     .attr("stroke-width", 2);
 
-                // Append image
+                // Create a clipPath for the image to ensure it stays within the circle
+                var clipId = "clip-" + d.id;
+                nodeGroup.append("clipPath")
+                    .attr("id", clipId)
+                    .append("circle")
+                    .attr("r", circleRadius * 0.9); // Slightly smaller to ensure no edges show
+
+                // Append image with clipPath
                 nodeGroup.append("image")
                     .attr("xlink:href", d.data.image)
-                    .attr("x", -imageSize / 2)
-                    .attr("y", -imageSize / 2)
-                    .attr("width", imageSize)
-                    .attr("height", imageSize);
+                    .attr("x", -circleRadius)
+                    .attr("y", -circleRadius)
+                    .attr("width", circleRadius * 2)
+                    .attr("height", circleRadius * 2)
+                    .attr("clip-path", "url(#" + clipId + ")")
+                    .attr("preserveAspectRatio", "xMidYMid slice"); // This ensures the image is centered and cropped
             } else {
                 // Append circle for nodes without images
                 nodeGroup.append("circle")
